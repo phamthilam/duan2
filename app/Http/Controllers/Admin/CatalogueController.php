@@ -17,7 +17,7 @@ class CatalogueController extends Controller
     public function index()
     {
         
-        $data = Catalogue::query()->latest('id')->get();
+        $data = Catalogue::query()->latest('id')->paginate(5);
 
         return view(self::PATH_VIEW . __FUNCTION__, compact('data'));
     }
@@ -36,12 +36,16 @@ class CatalogueController extends Controller
     public function store(Request $request)
     {
         $data = $request->except('cover');
-        $data['is_active'] ??= 0;
 
+        // ?? là kiểm tra trường is_active có tích ko 
+        //nếu có thì giá trị giữ nguyên còn ko có thì mặc định là defaut 
+        $data['is_active']=$data['is_active'] ?? 0;
+        
+        //kiểm tra xem file có tồn tại nếu tồn tại đẩy lên
         if ($request->hasFile('cover')) {
             $data['cover'] = Storage::put(self::PATH_UPLOAD, $request->file('cover'));
         }
-
+        // tạo dữ liệu bằng eloquent
         Catalogue::query()->create($data);
 
         return redirect()->route('admin.catalogues.index');
@@ -72,7 +76,28 @@ class CatalogueController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        // Tìm bản ghi với ID tương ứng. Nếu không tìm thấy, ném sang trang 404.
+        $model = Catalogue::query()->findOrFail($id);
+        $data = $request->except('cover');
+
+        // ?? là kiểm tra trường is_active có tích ko 
+        //nếu có thì giá trị giữ nguyên còn ko có thì mặc định là defaut 
+        $data['is_active']=$data['is_active'] ?? 0;
+        
+        //kiểm tra xem file có tồn tại nếu tồn tại đẩy lên
+        if ($request->hasFile('cover')) {
+            $data['cover'] = Storage::put(self::PATH_UPLOAD, $request->file('cover'));
+        }
+        //lưu amhr trước khi update ảnh mới để xóa ảnh đi tránh ghi đè
+        $curentCover=$model->cover;
+        // tạo dữ liệu bằng eloquent
+        $model->update($data);
+        // check nếu ảnh cũ có giá trị và có nằm trong mục storage thì xóa ảnh trong storage
+        if ($curentCover && Storage::exists($curentCover)) {
+            Storage::delete($curentCover);
+        }
+        return back();
+        
     }
 
     /**
@@ -81,5 +106,11 @@ class CatalogueController extends Controller
     public function destroy(string $id)
     {
         //
+        $model = Catalogue::query()->findOrFail($id);
+        $model->delete();
+        if ($model->cover && Storage::exists($model->cover)) {
+            Storage::delete($model->cover);
+        }
+        return back();
     }
 }
