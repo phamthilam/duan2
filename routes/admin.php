@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CatalogueController;
-
+use App\Http\Middleware\CheckAdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')
@@ -9,7 +9,7 @@ Route::prefix('admin')
     ->group(function () {
 
         Route::get('/', function () {
-            return 'dday laf trang dashboard';
+            return view('admin.dashboard') ;
         })->name('dashboard');
 
         Route::prefix('catalogues')

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use Illuminate\Http\Request;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +23,9 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-
+            if (Auth::user()->isAdmin()) {
+                return redirect('/admin');
+            }
 
             return redirect()->intended('/home');
         }
@@ -40,4 +43,5 @@ class LoginController extends Controller
 
         return redirect('/');
     }
+
 }

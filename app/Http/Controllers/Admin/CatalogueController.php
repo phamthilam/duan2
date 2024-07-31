@@ -17,7 +17,7 @@ class CatalogueController extends Controller
     public function index()
     {
         
-        $data = Catalogue::query()->latest('id')->paginate(5);
+        $data = Catalogue::query()->latest('id')->get();
 
         return view(self::PATH_VIEW . __FUNCTION__, compact('data'));
     }
@@ -93,7 +93,7 @@ class CatalogueController extends Controller
         // tạo dữ liệu bằng eloquent
         $model->update($data);
         // check nếu ảnh cũ có giá trị và có nằm trong mục storage thì xóa ảnh trong storage
-        if ($curentCover && Storage::exists($curentCover)) {
+        if ($request->hasFile('cover') && $curentCover && Storage::exists($curentCover)) {
             Storage::delete($curentCover);
         }
         return back();
